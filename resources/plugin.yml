@@ -1,0 +1,16 @@
+main: lowbrain.items.main.Main
+name: LowbrainItems
+version: 1.0
+author: Lowbrain
+description: Create custom items
+permission:
+ lbitems.give-self:
+  description: give custom item to yourself
+ lbitems.give-others:
+  description: give custom item to other players
+commands:
+ lbitems:
+  usage: |
+              Use /help lbitems [subcommand] for more information
+              /lbitems give <item name> <amount> - give a certain item to yourself
+              /lbitems give <player> <item name> <amount> - give a certain item to a other player

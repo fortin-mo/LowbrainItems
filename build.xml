@@ -1,0 +1,10 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<project name="LowbrainItems" default="compileLowbrainItems" basedir=".">
+    <target name="compileLowbrainItems" description="Create a jar for the project">
+        <mkdir dir="target"></mkdir>
+        <jar destfile="target/${ant.project.name}.jar">
+            <fileset dir="bin"></fileset>
+            <fileset dir="resources"></fileset>
+        </jar>
+    </target>
+</project>
