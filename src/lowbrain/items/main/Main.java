@@ -1,11 +1,11 @@
 package lowbrain.items.main;
 
-import net.minecraft.server.v1_10_R1.*;
+import net.minecraft.server.v1_11_R1.*;
 import org.bukkit.Bukkit;
 import org.bukkit.ChatColor;
 import org.bukkit.Material;
 import org.bukkit.configuration.ConfigurationSection;
-import org.bukkit.craftbukkit.v1_10_R1.inventory.CraftItemStack;
+import org.bukkit.craftbukkit.v1_11_R1.inventory.CraftItemStack;
 import org.bukkit.inventory.ItemStack;
 import org.bukkit.inventory.ShapedRecipe;
 import org.bukkit.inventory.meta.ItemMeta;
@@ -74,7 +74,7 @@ public class Main  extends JavaPlugin {
                     customWeapon.setItemMeta(ESmeta);
 
                     ConfigurationSection attributes = getConfig().getConfigurationSection(weapon + ".attributes");
-                    net.minecraft.server.v1_10_R1.ItemStack nmsStack = CraftItemStack.asNMSCopy(customWeapon);
+                    net.minecraft.server.v1_11_R1.ItemStack nmsStack = CraftItemStack.asNMSCopy(customWeapon);
                     NBTTagCompound compound = (nmsStack.hasTag()) ? nmsStack.getTag() : new NBTTagCompound();
                     NBTTagList modifiers = new NBTTagList();
 
