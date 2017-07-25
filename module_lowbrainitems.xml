@@ -1,0 +1,82 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<project name="module_lowbrainitems" default="compile.module.lowbrainitems">
+  <dirname property="module.lowbrainitems.basedir" file="${ant.file.module_lowbrainitems}"/>
+  
+  <property name="module.jdk.home.lowbrainitems" value="${project.jdk.home}"/>
+  <property name="module.jdk.bin.lowbrainitems" value="${project.jdk.bin}"/>
+  <property name="module.jdk.classpath.lowbrainitems" value="${project.jdk.classpath}"/>
+  
+  <property name="compiler.args.lowbrainitems" value="-encoding UTF-8 -source 8 -target 8 ${compiler.args}"/>
+  
+  <property name="lowbrainitems.output.dir" value="${module.lowbrainitems.basedir}/../LowbrainPackage/out/production/LowbrainItems"/>
+  <property name="lowbrainitems.testoutput.dir" value="${module.lowbrainitems.basedir}/../LowbrainPackage/out/test/LowbrainItems"/>
+  
+  <path id="lowbrainitems.module.bootclasspath">
+    <!-- Paths to be included in compilation bootclasspath -->
+  </path>
+  
+  <path id="lowbrainitems.module.production.classpath">
+    <path refid="${module.jdk.classpath.lowbrainitems}"/>
+    <path refid="library.spigot-1.12.classpath"/>
+  </path>
+  
+  <path id="lowbrainitems.runtime.production.module.classpath">
+    <pathelement location="${lowbrainitems.output.dir}"/>
+    <path refid="library.spigot-1.12.classpath"/>
+  </path>
+  
+  <path id="lowbrainitems.module.classpath">
+    <path refid="${module.jdk.classpath.lowbrainitems}"/>
+    <pathelement location="${lowbrainitems.output.dir}"/>
+    <path refid="library.spigot-1.12.classpath"/>
+  </path>
+  
+  <path id="lowbrainitems.runtime.module.classpath">
+    <pathelement location="${lowbrainitems.testoutput.dir}"/>
+    <pathelement location="${lowbrainitems.output.dir}"/>
+    <path refid="library.spigot-1.12.classpath"/>
+  </path>
+  
+  
+  <patternset id="excluded.from.module.lowbrainitems">
+    <patternset refid="ignored.files"/>
+  </patternset>
+  
+  <patternset id="excluded.from.compilation.lowbrainitems">
+    <patternset refid="excluded.from.module.lowbrainitems"/>
+  </patternset>
+  
+  <path id="lowbrainitems.module.sourcepath">
+    <dirset dir="${module.lowbrainitems.basedir}">
+      <include name="src"/>
+    </dirset>
+  </path>
+  
+  
+  <target name="compile.module.lowbrainitems" depends="compile.module.lowbrainitems.production,compile.module.lowbrainitems.tests" description="Compile module LowbrainItems"/>
+  
+  <target name="compile.module.lowbrainitems.production" depends="register.custom.compilers" description="Compile module LowbrainItems; production classes">
+    <mkdir dir="${lowbrainitems.output.dir}"/>
+    <javac2 destdir="${lowbrainitems.output.dir}" debug="${compiler.debug}" nowarn="${compiler.generate.no.warnings}" memorymaximumsize="${compiler.max.memory}" fork="true" executable="${module.jdk.bin.lowbrainitems}/javac">
+      <compilerarg line="${compiler.args.lowbrainitems}"/>
+      <bootclasspath refid="lowbrainitems.module.bootclasspath"/>
+      <classpath refid="lowbrainitems.module.production.classpath"/>
+      <src refid="lowbrainitems.module.sourcepath"/>
+      <patternset refid="excluded.from.compilation.lowbrainitems"/>
+    </javac2>
+    
+    <copy todir="${lowbrainitems.output.dir}">
+      <fileset dir="${module.lowbrainitems.basedir}/src">
+        <patternset refid="compiler.resources"/>
+        <type type="file"/>
+      </fileset>
+    </copy>
+  </target>
+  
+  <target name="compile.module.lowbrainitems.tests" depends="register.custom.compilers,compile.module.lowbrainitems.production" description="compile module LowbrainItems; test classes" unless="skip.tests"/>
+  
+  <target name="clean.module.lowbrainitems" description="cleanup module">
+    <delete dir="${lowbrainitems.output.dir}"/>
+    <delete dir="${lowbrainitems.testoutput.dir}"/>
+  </target>
+</project>

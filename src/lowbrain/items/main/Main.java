@@ -1,6 +1,5 @@
 package lowbrain.items.main;
 
-import lowbrain.core.config.Staffs;
 import net.minecraft.server.v1_12_R1.*;
 import org.bukkit.Bukkit;
 import org.bukkit.ChatColor;
@@ -16,7 +15,6 @@ import org.bukkit.inventory.meta.ItemMeta;
 import org.bukkit.material.MaterialData;
 import org.bukkit.plugin.java.JavaPlugin;
 import org.jetbrains.annotations.Contract;
-import org.jetbrains.annotations.Nullable;
 
 import java.io.File;
 import java.util.ArrayList;
@@ -166,10 +164,10 @@ public class Main  extends JavaPlugin {
     private boolean createCustomStaffs(){
         try {
             for (String staffName :
-                    Staffs.getInstance().getKeys(false)) {
+                    staffConfig.getKeys(false)) {
 
-                if(Staffs.getInstance().getBoolean(staffName +".enable")){
-                    Material material = Material.valueOf(Staffs.getInstance().getString(staffName +".material").toUpperCase());
+                if(staffConfig.getBoolean(staffName +".enable")){
+                    Material material = Material.valueOf(staffConfig.getString(staffName +".material").toUpperCase());
 
                     if(material == null){
                         this.getLogger().info("Material for " + staffName + " could not found !");
@@ -178,28 +176,28 @@ public class Main  extends JavaPlugin {
                     ItemStack customStaff = new ItemStack(material, 1);
                     ItemMeta ESmeta = customStaff.getItemMeta();
 
-                    ChatColor color = ChatColor.getByChar(Staffs.getInstance().getString(staffName +".display_color"));
+                    ChatColor color = ChatColor.getByChar(staffConfig.getString(staffName +".display_color"));
                     if(color == null) {
                         this.getLogger().info("Color for " + staffName + " could not found !");
                         return false;
                     }
                     ESmeta.setDisplayName(color + staffName);
 
-                    List<String> lores = Staffs.getInstance().getStringList(staffName + ".lores");
+                    List<String> lores = staffConfig.getStringList(staffName + ".lores");
                     if(lores == null) lores = new ArrayList<String>();
                     lores.add("last used : ");
-                    lores.add("durability : " + Staffs.getInstance().getInt(staffName + ".durability"));
+                    lores.add("durability : " + staffConfig.getInt(staffName + ".durability"));
                     ESmeta.setLore(lores);
 
                     customStaff.setItemMeta(ESmeta);
 
-                    ConfigurationSection attributes = Staffs.getInstance().getConfigurationSection(staffName + ".attributes");
+                    ConfigurationSection attributes = staffConfig.getConfigurationSection(staffName + ".attributes");
 
                     net.minecraft.server.v1_12_R1.ItemStack nmsStack = CraftItemStack.asNMSCopy(customStaff);
                     NBTTagCompound compound = (nmsStack.hasTag()) ? nmsStack.getTag() : new NBTTagCompound();
                     NBTTagList modifiers = getAttributeModifiers(attributes);
 
-                    List<String> enchts = Staffs.getInstance().getStringList(staffName + ".enchantments");
+                    List<String> enchts = staffConfig.getStringList(staffName + ".enchantments");
                     NBTTagList enchModifiers = getEnchants(enchts);
 
                     if(!modifiers.isEmpty()) {
@@ -214,7 +212,7 @@ public class Main  extends JavaPlugin {
 
                     ShapedRecipe customRecipe = new ShapedRecipe(namespacedKey, customStaff);
 
-                    ConfigurationSection recipeSection = Staffs.getInstance().getConfigurationSection(staffName + ".recipe");
+                    ConfigurationSection recipeSection = staffConfig.getConfigurationSection(staffName + ".recipe");
                     if(recipeSection == null){
                         this.getLogger().info("Missing recipe section for " + staffName);
                         continue;
