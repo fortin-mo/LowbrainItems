@@ -2,6 +2,7 @@ main: lowbrain.items.main.Main
 name: LowbrainItems
 version: 0.0.1
 author: Lowbrain
+softdepend: [LowbrainEconomy]
 description: Create custom items
 permission:
  lbitems.give-self:

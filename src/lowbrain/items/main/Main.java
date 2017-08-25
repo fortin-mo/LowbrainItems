@@ -80,28 +80,28 @@ public class Main  extends JavaPlugin {
     private boolean createCustomItems(){
         try {
             items = new HashMap<>();
-            for (String weapon :
+            for (String name :
                     config.getKeys(false)) {
 
-                if(getConfig().getBoolean(weapon +".enable")){
-                    Material material = Material.valueOf(getConfig().getString(weapon +".material").toUpperCase());
+                if(getConfig().getBoolean(name +".enable")){
+                    Material material = Material.valueOf(getConfig().getString(name +".material").toUpperCase());
 
                     if(material == null){
-                        this.getLogger().info("Material for " + weapon + " could not be found !");
+                        this.getLogger().info("Material for " + name + " could not be found !");
                         continue;
                     }
                     ItemStack customWeapon = new ItemStack(material, 1);
                     ItemMeta ESmeta = customWeapon.getItemMeta();
 
-                    ChatColor color = ChatColor.getByChar(getConfig().getString(weapon +".display_color"));
+                    ChatColor color = ChatColor.getByChar(getConfig().getString(name +".display_color"));
 
                     if(color != null)
-                        ESmeta.setDisplayName(color + weapon);
+                        ESmeta.setDisplayName(color + name);
 
                     else
-                        ESmeta.setDisplayName(weapon);
+                        ESmeta.setDisplayName(name);
 
-                    List<String> lores = getConfig().getStringList(weapon + ".lores");
+                    List<String> lores = getConfig().getStringList(name + ".lores");
 
                     if(lores != null && !lores.isEmpty())
                         ESmeta.setLore(lores);
@@ -109,12 +109,12 @@ public class Main  extends JavaPlugin {
 
                     customWeapon.setItemMeta(ESmeta);
 
-                    ConfigurationSection attributes = getConfig().getConfigurationSection(weapon + ".attributes");
+                    ConfigurationSection attributes = getConfig().getConfigurationSection(name + ".attributes");
                     net.minecraft.server.v1_12_R1.ItemStack nmsStack = CraftItemStack.asNMSCopy(customWeapon);
                     NBTTagCompound compound = (nmsStack.hasTag()) ? nmsStack.getTag() : new NBTTagCompound();
                     NBTTagList modifiers = getAttributeModifiers(attributes);
 
-                    List<String> enchts = getConfig().getStringList(weapon + ".enchantments");
+                    List<String> enchts = getConfig().getStringList(name + ".enchantments");
                     NBTTagList enchModifiers = getEnchants(enchts);
 
                     if(!modifiers.isEmpty())
@@ -129,21 +129,21 @@ public class Main  extends JavaPlugin {
 
                     ShapedRecipe customRecipe = new ShapedRecipe(namespacedKey, customWeapon);
 
-                    ConfigurationSection recipeSection = getConfig().getConfigurationSection(weapon + ".recipe");
+                    ConfigurationSection recipeSection = getConfig().getConfigurationSection(name + ".recipe");
                     if(recipeSection == null){
-                        this.getLogger().info("Missing recipe section for " + weapon);
+                        this.getLogger().info("Missing recipe section for " + name);
                         continue;
                     }
 
                     String[] shape = recipeSection.getString("shape").split(",");
                     if(shape.length != 3){
-                        this.getLogger().info("Wrong recipe shape format for " + weapon);
+                        this.getLogger().info("Wrong recipe shape format for " + name);
                         continue;
                     }
 
                     customRecipe.shape(shape[0].trim().replace("-"," "),shape[1].trim().replace("-"," "),shape[2].trim().replace("-"," "));
                     if (setRecipeIngredients(customRecipe, recipeSection.getStringList("ingredients"))) {
-                        this.getItems().put(weapon,customRecipe.getResult());
+                        this.getItems().put(name,customRecipe.getResult());
                         Bukkit.addRecipe(customRecipe);
                     }
                 }

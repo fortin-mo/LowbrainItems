@@ -1,3 +1,8 @@
+####################################################
+#  IMPORTANT : STAFF ONLY WORKS WITH LowbrainCore  #
+####################################################
+
+
 #effect :
 #
 # fire_tick
@@ -17,7 +22,7 @@
 # base_damage : initial damage when projectile hit living entity (player, mobs). Don't forget that the damage will then be multiplier by players damage_by_magic multiplier
 # effec_duration : the duration of the effect in second ( ex: fire_tick sets player on fire for a certain number of time)
 
-staff_teleport:
+STAFF_OF_TELEPORTATION:
  enable: true
  material: STICK
  cooldown: 15
@@ -32,7 +37,7 @@ staff_teleport:
   ingredients:
    - E,ENDER_PEARL
    - S,STICK
-staff_teleport_plus:
+STAFF_OF_TELEPORTATION_PLUS:
  enable: true
  material: BLAZE_ROD
  cooldown: 10
@@ -48,7 +53,7 @@ staff_teleport_plus:
    - E,ENDER_PEARL
    - B,BLAZE_ROD
 
-staff_fire:
+STAFF_OF_FIRE:
  enable: true
  material: STICK
  cooldown: 10
@@ -65,7 +70,7 @@ staff_fire:
   ingredients:
    - P,BLAZE_POWDER
    - S,STICK
-staff_fire_plus:
+STAFF_OF_FIRE_PLUS:
  enable: true
  material: BLAZE_ROD
  cooldown: 6
@@ -83,7 +88,7 @@ staff_fire_plus:
    - P,BLAZE_POWDER
    - B,BLAZE_ROD
 
-staff_fireball:
+STAFF_OF_FIREBALL:
  enable: true
  material: STICK
  cooldown: 20
@@ -99,7 +104,7 @@ staff_fireball:
   ingredients:
    - P,MAGMA_CREAM
    - S,STICK
-staff_fireball_plus:
+STAFF_OF_FIREBALL_PLUS:
  enable: true
  material: BLAZE_ROD
  cooldown: 15
@@ -116,7 +121,7 @@ staff_fireball_plus:
    - P,MAGMA_CREAM
    - B,BLAZE_ROD
 
-staff_freezing:
+STAFF_OF_FREEZING:
  enable: true
  material: STICK
  cooldown: 15
@@ -133,7 +138,7 @@ staff_freezing:
   ingredients:
    - P,NETHER_STAR
    - S,STICK
-staff_freezing_plus:
+STAFF_OF_FREEZING_PLUS:
  enable: true
  material: BLAZE_ROD
  cooldown: 15
