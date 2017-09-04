@@ -12,7 +12,6 @@ import org.bukkit.craftbukkit.v1_12_R1.inventory.CraftItemStack;
 import org.bukkit.inventory.ItemStack;
 import org.bukkit.inventory.ShapedRecipe;
 import org.bukkit.inventory.meta.ItemMeta;
-import org.bukkit.material.MaterialData;
 import org.bukkit.plugin.java.JavaPlugin;
 import org.jetbrains.annotations.Contract;
 
@@ -25,9 +24,9 @@ import java.util.Map;
 /**
  * Created by Moofy on 28/08/2016.
  */
-public class Main  extends JavaPlugin {
+public class LowbrainItems extends JavaPlugin {
 
-    private static Main instance;
+    private static LowbrainItems instance;
 
     private HashMap<String,ItemStack> items;
     private HashMap<String,ItemStack> staffs;
@@ -37,7 +36,7 @@ public class Main  extends JavaPlugin {
     private FileConfiguration staffConfig;
 
     @Contract(pure = true)
-    public static Main getInstance() {return instance;}
+    public static LowbrainItems getInstance() {return instance;}
 
     /**
      * called when the plugin is initially enabled
@@ -80,8 +79,7 @@ public class Main  extends JavaPlugin {
     private boolean createCustomItems(){
         try {
             items = new HashMap<>();
-            for (String name :
-                    config.getKeys(false)) {
+            for (String name : config.getKeys(false)) {
 
                 if(getConfig().getBoolean(name +".enable")){
                     Material material = Material.valueOf(getConfig().getString(name +".material").toUpperCase());
@@ -127,7 +125,7 @@ public class Main  extends JavaPlugin {
                         customWeapon = CraftItemStack.asBukkitCopy(nmsStack);
                     }
 
-                    ShapedRecipe customRecipe = new ShapedRecipe(namespacedKey, customWeapon);
+                    ShapedRecipe customRecipe = new ShapedRecipe(new NamespacedKey(this, "LowbrainItems." + name), customWeapon);
 
                     ConfigurationSection recipeSection = getConfig().getConfigurationSection(name + ".recipe");
                     if(recipeSection == null){
@@ -141,17 +139,18 @@ public class Main  extends JavaPlugin {
                         continue;
                     }
 
-                    customRecipe.shape(shape[0].trim().replace("-"," "),shape[1].trim().replace("-"," "),shape[2].trim().replace("-"," "));
+                    customRecipe.shape(shape[0].trim().replace("-"," ")
+                            , shape[1].trim().replace("-"," ")
+                            , shape[2].trim().replace("-"," "));
+
                     if (setRecipeIngredients(customRecipe, recipeSection.getStringList("ingredients"))) {
                         this.getItems().put(name,customRecipe.getResult());
                         Bukkit.addRecipe(customRecipe);
                     }
                 }
             }
-
         } catch (Exception e){
             e.printStackTrace();
-            this.getLogger().info(e.getMessage());
             return false;
         }
         return true;
@@ -163,79 +162,82 @@ public class Main  extends JavaPlugin {
      */
     private boolean createCustomStaffs(){
         try {
-            for (String staffName :
-                    staffConfig.getKeys(false)) {
+            staffs = new HashMap<>();
+            for (String staffName: staffConfig.getKeys(false)) {
 
-                if(staffConfig.getBoolean(staffName +".enable")){
-                    Material material = Material.valueOf(staffConfig.getString(staffName +".material").toUpperCase());
+                if(!staffConfig.getBoolean(staffName +".enable", false))
+                    continue;
 
-                    if(material == null){
-                        this.getLogger().info("Material for " + staffName + " could not found !");
-                        return false;
-                    }
-                    ItemStack customStaff = new ItemStack(material, 1);
-                    ItemMeta ESmeta = customStaff.getItemMeta();
+                Material material = Material.valueOf(staffConfig.getString(staffName +".material").toUpperCase());
 
-                    ChatColor color = ChatColor.getByChar(staffConfig.getString(staffName +".display_color"));
-                    if(color == null) {
-                        this.getLogger().info("Color for " + staffName + " could not found !");
-                        return false;
-                    }
-                    ESmeta.setDisplayName(color + staffName);
+                if(material == null){
+                    this.getLogger().info("Material for " + staffName + " could not found !");
+                    return false;
+                }
 
-                    List<String> lores = staffConfig.getStringList(staffName + ".lores");
-                    if(lores == null) lores = new ArrayList<String>();
-                    lores.add("last used : ");
-                    lores.add("durability : " + staffConfig.getInt(staffName + ".durability"));
-                    ESmeta.setLore(lores);
+                ItemStack customStaff = new ItemStack(material, 1);
+                ItemMeta ESmeta = customStaff.getItemMeta();
 
-                    customStaff.setItemMeta(ESmeta);
+                ChatColor color = ChatColor.getByChar(staffConfig.getString(staffName +".display_color"));
+                if(color == null) {
+                    this.getLogger().info("Color for " + staffName + " could not found !");
+                    return false;
+                }
+                ESmeta.setDisplayName(color + staffName);
 
-                    ConfigurationSection attributes = staffConfig.getConfigurationSection(staffName + ".attributes");
+                List<String> lores = staffConfig.getStringList(staffName + ".lores");
+                if(lores == null) lores = new ArrayList<String>();
+                lores.add("last used : ");
+                lores.add("durability : " + staffConfig.getInt(staffName + ".durability"));
+                ESmeta.setLore(lores);
 
-                    net.minecraft.server.v1_12_R1.ItemStack nmsStack = CraftItemStack.asNMSCopy(customStaff);
-                    NBTTagCompound compound = (nmsStack.hasTag()) ? nmsStack.getTag() : new NBTTagCompound();
-                    NBTTagList modifiers = getAttributeModifiers(attributes);
+                customStaff.setItemMeta(ESmeta);
 
-                    List<String> enchts = staffConfig.getStringList(staffName + ".enchantments");
-                    NBTTagList enchModifiers = getEnchants(enchts);
+                ConfigurationSection attributes = staffConfig.getConfigurationSection(staffName + ".attributes");
 
-                    if(!modifiers.isEmpty()) {
-                        compound.set("AttributeModifiers", modifiers);
-                    }
-                    compound.set("ench", enchModifiers);
+                net.minecraft.server.v1_12_R1.ItemStack nmsStack = CraftItemStack.asNMSCopy(customStaff);
+                NBTTagCompound compound = (nmsStack.hasTag()) ? nmsStack.getTag() : new NBTTagCompound();
+                NBTTagList modifiers = getAttributeModifiers(attributes);
 
-                    if(!modifiers.isEmpty() || !enchModifiers.isEmpty()){
-                        nmsStack.setTag(compound);
-                        customStaff = CraftItemStack.asBukkitCopy(nmsStack);
-                    }
+                List<String> enchts = staffConfig.getStringList(staffName + ".enchantments");
+                NBTTagList enchModifiers = getEnchants(enchts);
 
-                    ShapedRecipe customRecipe = new ShapedRecipe(namespacedKey, customStaff);
+                if(!modifiers.isEmpty())
+                    compound.set("AttributeModifiers", modifiers);
 
-                    ConfigurationSection recipeSection = staffConfig.getConfigurationSection(staffName + ".recipe");
-                    if(recipeSection == null){
-                        this.getLogger().info("Missing recipe section for " + staffName);
-                        continue;
-                    }
+                compound.set("ench", enchModifiers);
 
-                    String[] shape = recipeSection.getString("shape").split(",");
-                    if(shape.length != 3){
-                        this.getLogger().info("Wrong recipe shape format for " + staffName);
-                        continue;
-                    }
+                if(!modifiers.isEmpty() || !enchModifiers.isEmpty()){
+                    nmsStack.setTag(compound);
+                    customStaff = CraftItemStack.asBukkitCopy(nmsStack);
+                }
 
-                    customRecipe.shape(shape[0].trim().replace("-"," "),shape[1].trim().replace("-"," "),shape[2].trim().replace("-"," "));
+                ShapedRecipe customRecipe = new ShapedRecipe(new NamespacedKey(this, "LowbrainItems." + staffName), customStaff);
 
-                    if (setRecipeIngredients(customRecipe, recipeSection.getStringList("ingredients"))) {
-                        this.getStaffs().put(staffName,customRecipe.getResult());
-                        Bukkit.addRecipe(customRecipe);
-                    }
+                ConfigurationSection recipeSection = staffConfig.getConfigurationSection(staffName + ".recipe");
+                if(recipeSection == null){
+                    this.getLogger().info("Missing recipe section for " + staffName);
+                    continue;
+                }
+
+                String[] shape = recipeSection.getString("shape").split(",");
+                if(shape.length != 3){
+                    this.getLogger().info("Wrong recipe shape format for " + staffName);
+                    continue;
+                }
+
+                customRecipe.shape(shape[0].trim().replace("-"," ")
+                        , shape[1].trim().replace("-"," ")
+                        , shape[2].trim().replace("-"," "));
+
+                if (setRecipeIngredients(customRecipe, recipeSection.getStringList("ingredients"))) {
+                    this.getStaffs().put(staffName, customRecipe.getResult());
+                    Bukkit.addRecipe(customRecipe);
                 }
             }
 
         }catch (Exception e){
             e.printStackTrace();
-            this.getLogger().info(e.getMessage());
             return false;
         }
         return true;
@@ -325,7 +327,7 @@ public class Main  extends JavaPlugin {
 
     private void loadConfig() {
         File configFile = new File(this.getDataFolder(),"config.yml");
-        File staffFile = new File(this.getDataFolder(),"staff.yml");
+        File staffFile = new File(this.getDataFolder(),"staffs.yml");
 
         if (!configFile.exists()) {
             configFile.getParentFile().mkdirs();
@@ -334,7 +336,7 @@ public class Main  extends JavaPlugin {
 
         if (!staffFile.exists()) {
             staffFile.getParentFile().mkdirs();
-            saveResource("staff.yml", false);
+            saveResource("staffs.yml", false);
         }
 
         config = new YamlConfiguration();
