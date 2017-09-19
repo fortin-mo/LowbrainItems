@@ -16,7 +16,7 @@
         <SOURCES />
       </library>
     </orderEntry>
-    <orderEntry type="library" name="spigot-1.12.1" level="project" />
     <orderEntry type="module" module-name="LowbrainLibrary" />
+    <orderEntry type="library" name="spigot-1.12.2" level="project" />
   </component>
 </module>

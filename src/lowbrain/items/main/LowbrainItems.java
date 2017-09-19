@@ -1,21 +1,20 @@
 package lowbrain.items.main;
 
 import lowbrain.library.config.YamlConfig;
-import net.minecraft.server.v1_12_R1.*;
+import lowbrain.library.fn;
 import org.bukkit.Bukkit;
 import org.bukkit.ChatColor;
 import org.bukkit.Material;
 import org.bukkit.NamespacedKey;
 import org.bukkit.configuration.ConfigurationSection;
 import org.bukkit.configuration.file.FileConfiguration;
-import org.bukkit.craftbukkit.v1_12_R1.inventory.CraftItemStack;
 import org.bukkit.inventory.ItemStack;
 import org.bukkit.inventory.ShapedRecipe;
 import org.bukkit.inventory.meta.ItemMeta;
 import org.bukkit.plugin.java.JavaPlugin;
 import org.jetbrains.annotations.Contract;
 
-import java.io.File;
+import java.lang.reflect.InvocationTargetException;
 import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
@@ -105,21 +104,42 @@ public class LowbrainItems extends JavaPlugin {
                     customWeapon.setItemMeta(ESmeta);
 
                     ConfigurationSection attributes = getConfig().getConfigurationSection(name + ".attributes");
-                    net.minecraft.server.v1_12_R1.ItemStack nmsStack = CraftItemStack.asNMSCopy(customWeapon);
-                    NBTTagCompound compound = (nmsStack.hasTag()) ? nmsStack.getTag() : new NBTTagCompound();
-                    NBTTagList modifiers = getAttributeModifiers(attributes);
+
+                    Class ItemStackClass = fn.getMinecraftClass("ItemStack");
+                    Class NBTTagCompoundClass = fn.getMinecraftClass("NBTTagCompound");
+                    Class NBTTagListClass = fn.getMinecraftClass("NBTTagList");
+                    Class CraftItemStackClass = fn.getBukkitClass("inventory.CraftItemStack");
+                    Class NBTBase = fn.getMinecraftClass("NBTBase");
+
+                    // net.minecraft.server.v1_12_R1.ItemStack nmsStack = CraftItemStack.asNMSCopy(customWeapon);
+                    Object nmsStack = CraftItemStackClass.getMethod("asNMSCopy", ItemStack.class).invoke(null, customWeapon);
+
+                    // NBTTagCompound compound = (nmsStack.hasTag()) ? nmsStack.getTag() : new NBTTagCompound();
+                    Object compound = ((boolean)ItemStackClass.getMethod("hasTag").invoke(nmsStack))
+                            ? ItemStackClass.getMethod("getTag").invoke(nmsStack)
+                            : NBTTagCompoundClass.getConstructor().newInstance();
+
+                    // NBTTagList modifiers = getAttributeModifiers(attributes);
+                    Object modifiers = getAttributeModifiers(attributes);
 
                     List<String> enchts = getConfig().getStringList(name + ".enchantments");
-                    NBTTagList enchModifiers = getEnchants(enchts);
 
-                    if(!modifiers.isEmpty())
-                        compound.set("AttributeModifiers", modifiers);
+                    // NBTTagList enchModifiers = getEnchants(enchts);
+                    Object enchModifiers = getEnchants(enchts);
 
-                    compound.set("ench", enchModifiers);
+                    if(!(boolean)NBTTagListClass.getMethod("isEmpty").invoke(modifiers))
+                        // compound.set("AttributeModifiers", enchModifiers);
+                        NBTTagCompoundClass.getMethod("set", String.class, NBTBase).invoke(compound,"AttributeModifiers", modifiers);
 
-                    if(!modifiers.isEmpty() || !enchModifiers.isEmpty()) {
-                        nmsStack.setTag(compound);
-                        customWeapon = CraftItemStack.asBukkitCopy(nmsStack);
+                    // compound.set("ench", enchModifiers);
+                    NBTTagCompoundClass.getMethod("set", String.class, NBTBase).invoke(compound,"ench", enchModifiers);
+
+                    if(!(boolean)NBTTagListClass.getMethod("isEmpty").invoke(modifiers)
+                            || !(boolean)NBTTagListClass.getMethod("isEmpty").invoke(enchModifiers)){
+                        // nmsStack.setTag(compound);
+                        ItemStackClass.getMethod("setTag", NBTTagCompoundClass).invoke(nmsStack, compound);
+                        // customStaff = CraftItemStack.asBukkitCopy(nmsStack);
+                        customWeapon = (ItemStack) CraftItemStackClass.getMethod("asBukkitCopy", ItemStackClass).invoke(null, nmsStack);
                     }
 
                     ShapedRecipe customRecipe = new ShapedRecipe(new NamespacedKey(this, "LowbrainItems." + name), customWeapon);
@@ -205,21 +225,41 @@ public class LowbrainItems extends JavaPlugin {
 
                 ConfigurationSection attributes = staffSection.getConfigurationSection("attributes");
 
-                net.minecraft.server.v1_12_R1.ItemStack nmsStack = CraftItemStack.asNMSCopy(customStaff);
-                NBTTagCompound compound = (nmsStack.hasTag()) ? nmsStack.getTag() : new NBTTagCompound();
-                NBTTagList modifiers = getAttributeModifiers(attributes);
+                Class ItemStackClass = fn.getMinecraftClass("ItemStack");
+                Class NBTTagCompoundClass = fn.getMinecraftClass("NBTTagCompound");
+                Class NBTTagListClass = fn.getMinecraftClass("NBTTagList");
+                Class CraftItemStackClass = fn.getBukkitClass("inventory.CraftItemStack");
+                Class NBTBase = fn.getMinecraftClass("NBTBase");
+
+                // net.minecraft.server.v1_12_R1.ItemStack nmsStack
+                Object nmsStack = CraftItemStackClass.getMethod("asNMSCopy", ItemStack.class).invoke(null, customStaff);
+                //NBTTagCompound
+                Object compound = ((boolean)ItemStackClass.getMethod("hasTag").invoke(nmsStack))
+                        ? ItemStackClass.getMethod("getTag").invoke(nmsStack)
+                        : NBTTagCompoundClass.getConstructor().newInstance();
+
+                //NBTTagList
+                Object modifiers = getAttributeModifiers(attributes);
 
                 List<String> enchts = staffSection.getStringList("enchantments");
-                NBTTagList enchModifiers = getEnchants(enchts);
 
-                if(!modifiers.isEmpty())
-                    compound.set("AttributeModifiers", modifiers);
+                //NBTTagList
+                Object enchModifiers = getEnchants(enchts);
 
-                compound.set("ench", enchModifiers);
+                if(!(boolean)NBTTagListClass.getMethod("isEmpty").invoke(modifiers))
+                    // compound.set("AttributeModifiers", enchModifiers);
+                    NBTTagCompoundClass.getMethod("set", String.class, NBTBase).invoke(compound,"AttributeModifiers", modifiers);
 
-                if(!modifiers.isEmpty() || !enchModifiers.isEmpty()){
-                    nmsStack.setTag(compound);
-                    customStaff = CraftItemStack.asBukkitCopy(nmsStack);
+                // compound.set("ench", enchModifiers);
+                NBTTagCompoundClass.getMethod("set", String.class, NBTBase).invoke(compound,"ench", enchModifiers);
+
+
+                if(!(boolean)NBTTagListClass.getMethod("isEmpty").invoke(modifiers)
+                        || !(boolean)NBTTagListClass.getMethod("isEmpty").invoke(enchModifiers)){
+                    // nmsStack.setTag(compound);
+                    ItemStackClass.getMethod("setTag", NBTTagCompoundClass).invoke(nmsStack, compound);
+                    // customStaff = CraftItemStack.asBukkitCopy(nmsStack);
+                    customStaff = (ItemStack) CraftItemStackClass.getMethod("asBukkitCopy", ItemStackClass).invoke(null, nmsStack);
                 }
 
                 ShapedRecipe customRecipe = new ShapedRecipe(new NamespacedKey(this, "LowbrainItems." + staffName), customStaff);
@@ -253,16 +293,23 @@ public class LowbrainItems extends JavaPlugin {
         return true;
     }
 
-    private NBTTagList getEnchants(List<String> enchts) {
-        NBTTagList enchModifiers = new NBTTagList();
+    private Object getEnchants(List<String> enchts)
+            throws NoSuchMethodException, ClassNotFoundException, IllegalAccessException, InvocationTargetException, InstantiationException {
+        Class NBTTagCompoundClass = fn.getMinecraftClass("NBTTagCompound");
+        Class NBTTagListClass = fn.getMinecraftClass("NBTTagList");
+        Class NBTTagIntClass = fn.getMinecraftClass("NBTTagInt");
+        Class NBTBase = fn.getMinecraftClass("NBTBase");
+
+        // NBTTagList enchModifiers = new NBTTagList();
+        Object enchModifiers = NBTTagListClass.getConstructor().newInstance();
 
         //adding enchantments if needed
         if (enchts != null) {
             for (String ench :
                     enchts) {
 
-                NBTTagCompound modifier = new NBTTagCompound();
-
+                // NBTTagCompound modifier = new NBTTagCompound();
+                Object modifier = NBTTagCompoundClass.getConstructor().newInstance();
                 String[] temp = ench.split(",");
 
                 int id = Integer.parseInt(temp[0].trim());
@@ -273,36 +320,82 @@ public class LowbrainItems extends JavaPlugin {
                     continue;
                 }
 
-                modifier.set("id", new NBTTagInt(id));
-                modifier.set("lvl", new NBTTagInt(level));
+                // modifier.set("id", new NBTTagInt(id));
+                NBTTagCompoundClass.getMethod("set", String.class, NBTBase)
+                        .invoke(modifier, "id", NBTTagIntClass.getConstructor(int.class).newInstance(id));
+                // modifier.set("lvl", new NBTTagInt(level));
+                NBTTagCompoundClass.getMethod("set", String.class, NBTBase)
+                        .invoke(modifier, "lvl", NBTTagIntClass.getConstructor(int.class).newInstance(level));
 
-                enchModifiers.add(modifier);
+                // enchModifiers.add(modifier);
+                NBTTagListClass.getMethod("add", NBTBase).invoke(enchModifiers, modifier);
             }
         }
 
         return enchModifiers;
     }
 
-    private NBTTagList getAttributeModifiers (ConfigurationSection attributes) {
-        NBTTagList modifiers = new NBTTagList();
+    private Object getAttributeModifiers (ConfigurationSection attributes)
+            throws ClassNotFoundException, NoSuchMethodException, IllegalAccessException, InvocationTargetException, InstantiationException {
+        Class NBTTagCompoundClass = fn.getMinecraftClass("NBTTagCompound");
+        Class NBTTagIntClass = fn.getMinecraftClass("NBTTagInt");
+        Class NBTTagStringClass = fn.getMinecraftClass("NBTTagString");
+        Class NBTTagDoubleClass = fn.getMinecraftClass("NBTTagDouble");
+        Class NBTTagListClass = fn.getMinecraftClass("NBTTagList");
+        Class NBTBase = fn.getMinecraftClass("NBTBase");
+
+        // NBTTagList modifiers = new NBTTagList();
+        Object modifiers = NBTTagListClass.getConstructor().newInstance();
+
         //adding attributes if needed
         if(attributes != null){
-            for (String attribute :
-                    attributes.getKeys(false)) {
-                NBTTagCompound modifier = new NBTTagCompound();
-                modifier.set("AttributeName", new NBTTagString("generic." + attributes.getString(attribute +".attribute_name")));
-                modifier.set("Name", new NBTTagString(attributes.getString(attribute +".name")));
-                modifier.set("Amount", new NBTTagDouble(attributes.getDouble(attribute +".amount")));
-                modifier.set("Operation", new NBTTagInt(attributes.getInt(attribute +".operation")));
-                modifier.set("UUIDLeast", new NBTTagInt(894654));
-                modifier.set("UUIDMost", new NBTTagInt(2872));
+            for (String attribute : attributes.getKeys(false)) {
+                // NBTTagCompound modifier = new NBTTagCompound();
+
+                Object modifier = NBTTagCompoundClass.getConstructor().newInstance();
+
+                //net.minecraft.server.v1_12_R1.NBTTagList a = new net.minecraft.server.v1_12_R1.NBTTagList();
+
+                // modifier.set("AttributeName", new NBTTagString("generic." + attributes.getString(attribute +".attribute_name")));
+                NBTTagCompoundClass.getMethod("set", String.class, NBTBase)
+                        .invoke(modifier, "AttributeName", NBTTagStringClass.getConstructor(String.class)
+                            .newInstance(attributes.getString(attribute +".attribute_name")));
+
+                // modifier.set("Name", new NBTTagString(attributes.getString(attribute +".name")));
+                NBTTagCompoundClass.getMethod("set", String.class, NBTBase)
+                        .invoke(modifier, "Name", NBTTagStringClass.getConstructor(String.class)
+                            .newInstance(attributes.getString(attribute +".name")));
+
+                // modifier.set("Amount", new NBTTagDouble(attributes.getDouble(attribute +".amount")));
+                NBTTagCompoundClass.getMethod("set", String.class, NBTBase)
+                        .invoke(modifier, "Amount", NBTTagDoubleClass.getConstructor(double.class)
+                            .newInstance(attributes.getDouble(attribute +".amount")));
+
+                // modifier.set("Operation", new NBTTagInt(attributes.getInt(attribute +".operation")));
+                NBTTagCompoundClass.getMethod("set", String.class, NBTBase)
+                        .invoke(modifier, "UUIDLeast", NBTTagIntClass.getConstructor(int.class)
+                            .newInstance(attributes.getInt(attribute +".operation")));
+
+                // modifier.set("UUIDLeast", new NBTTagInt(894654));
+                NBTTagCompoundClass.getMethod("set", String.class, NBTBase)
+                        .invoke(modifier, "UUIDLeast", NBTTagIntClass.getConstructor(int.class)
+                            .newInstance(894654));
+
+                // modifier.set("UUIDMost", new NBTTagInt(2872));
+                NBTTagCompoundClass.getMethod("set", String.class, NBTBase)
+                        .invoke(modifier, "UUIDMost", NBTTagIntClass.getConstructor(int.class)
+                            .newInstance(2872));
 
                 String slots = attributes.getString(attribute +".slots");
                 if(slots.length() > 0){
-                    modifier.set("Slot", new NBTTagString(slots));
+                    // modifier.set("Slot", new NBTTagString(slots));
+                    NBTTagCompoundClass.getMethod("set", String.class, NBTBase)
+                            .invoke(modifier, "Slot", NBTTagStringClass.getConstructor(String.class)
+                                .newInstance(slots));
                 }
 
-                modifiers.add(modifier);
+                // modifiers.add(modifier);
+                NBTTagListClass.getMethod("add", NBTBase).invoke(modifiers, modifier);
             }
         }
 
