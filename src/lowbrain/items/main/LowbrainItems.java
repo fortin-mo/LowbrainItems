@@ -1,5 +1,6 @@
 package lowbrain.items.main;
 
+import lowbrain.library.config.YamlConfig;
 import net.minecraft.server.v1_12_R1.*;
 import org.bukkit.Bukkit;
 import org.bukkit.ChatColor;
@@ -7,7 +8,6 @@ import org.bukkit.Material;
 import org.bukkit.NamespacedKey;
 import org.bukkit.configuration.ConfigurationSection;
 import org.bukkit.configuration.file.FileConfiguration;
-import org.bukkit.configuration.file.YamlConfiguration;
 import org.bukkit.craftbukkit.v1_12_R1.inventory.CraftItemStack;
 import org.bukkit.inventory.ItemStack;
 import org.bukkit.inventory.ShapedRecipe;
@@ -21,9 +21,6 @@ import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 
-/**
- * Created by Moofy on 28/08/2016.
- */
 public class LowbrainItems extends JavaPlugin {
 
     private static LowbrainItems instance;
@@ -32,8 +29,8 @@ public class LowbrainItems extends JavaPlugin {
     private HashMap<String,ItemStack> staffs;
     private NamespacedKey namespacedKey;
 
-    private FileConfiguration config;
-    private FileConfiguration staffConfig;
+    private YamlConfig config;
+    private YamlConfig staffConfig;
 
     @Contract(pure = true)
     public static LowbrainItems getInstance() {return instance;}
@@ -165,10 +162,12 @@ public class LowbrainItems extends JavaPlugin {
             staffs = new HashMap<>();
             for (String staffName: staffConfig.getKeys(false)) {
 
-                if(!staffConfig.getBoolean(staffName +".enable", false))
+                ConfigurationSection staffSection = staffConfig.getConfigurationSection(staffName);
+
+                if(!staffSection.getBoolean("enable", false))
                     continue;
 
-                Material material = Material.valueOf(staffConfig.getString(staffName +".material").toUpperCase());
+                Material material = Material.valueOf(staffSection.getString("material").toUpperCase());
 
                 if(material == null){
                     this.getLogger().info("Material for " + staffName + " could not found !");
@@ -178,28 +177,39 @@ public class LowbrainItems extends JavaPlugin {
                 ItemStack customStaff = new ItemStack(material, 1);
                 ItemMeta ESmeta = customStaff.getItemMeta();
 
-                ChatColor color = ChatColor.getByChar(staffConfig.getString(staffName +".display_color"));
+                ChatColor color = ChatColor.getByChar(staffSection.getString("display_color"));
                 if(color == null) {
                     this.getLogger().info("Color for " + staffName + " could not found !");
                     return false;
                 }
                 ESmeta.setDisplayName(color + staffName);
 
-                List<String> lores = staffConfig.getStringList(staffName + ".lores");
-                if(lores == null) lores = new ArrayList<String>();
+                List<String> lores = staffSection.getStringList("lores");
+
+                if(lores == null)
+                    lores = new ArrayList<String>();
+
+                String cooldown = staffSection.getString("cooldown", "0");
+                String baseDamage = staffSection.getString("base_damage", "0");
+                String effect =  staffSection.getString("effect", "none");
+
                 lores.add("last used : ");
-                lores.add("durability : " + staffConfig.getInt(staffName + ".durability"));
+                lores.add("durability : " + staffSection.getInt("durability"));
+                lores.add("effect : " + effect);
+                lores.add("base damage : " + baseDamage);
+                lores.add("cooldown : " + cooldown);
+
                 ESmeta.setLore(lores);
 
                 customStaff.setItemMeta(ESmeta);
 
-                ConfigurationSection attributes = staffConfig.getConfigurationSection(staffName + ".attributes");
+                ConfigurationSection attributes = staffSection.getConfigurationSection("attributes");
 
                 net.minecraft.server.v1_12_R1.ItemStack nmsStack = CraftItemStack.asNMSCopy(customStaff);
                 NBTTagCompound compound = (nmsStack.hasTag()) ? nmsStack.getTag() : new NBTTagCompound();
                 NBTTagList modifiers = getAttributeModifiers(attributes);
 
-                List<String> enchts = staffConfig.getStringList(staffName + ".enchantments");
+                List<String> enchts = staffSection.getStringList("enchantments");
                 NBTTagList enchModifiers = getEnchants(enchts);
 
                 if(!modifiers.isEmpty())
@@ -214,7 +224,7 @@ public class LowbrainItems extends JavaPlugin {
 
                 ShapedRecipe customRecipe = new ShapedRecipe(new NamespacedKey(this, "LowbrainItems." + staffName), customStaff);
 
-                ConfigurationSection recipeSection = staffConfig.getConfigurationSection(staffName + ".recipe");
+                ConfigurationSection recipeSection = staffSection.getConfigurationSection("recipe");
                 if(recipeSection == null){
                     this.getLogger().info("Missing recipe section for " + staffName);
                     continue;
@@ -326,28 +336,8 @@ public class LowbrainItems extends JavaPlugin {
     }
 
     private void loadConfig() {
-        File configFile = new File(this.getDataFolder(),"config.yml");
-        File staffFile = new File(this.getDataFolder(),"staffs.yml");
-
-        if (!configFile.exists()) {
-            configFile.getParentFile().mkdirs();
-            saveResource("config.yml", false);
-        }
-
-        if (!staffFile.exists()) {
-            staffFile.getParentFile().mkdirs();
-            saveResource("staffs.yml", false);
-        }
-
-        config = new YamlConfiguration();
-        staffConfig = new YamlConfiguration();
-
-        try {
-            config.load(configFile);
-            staffConfig.load(staffFile);
-        }catch (Exception e){
-            e.printStackTrace();
-        }
+        this.config = new YamlConfig("config.yml", this);
+        this.staffConfig = new YamlConfig("staffs.yml", this);
     }
 }
 
