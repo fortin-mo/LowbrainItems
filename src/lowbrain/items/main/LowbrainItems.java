@@ -1,13 +1,16 @@
 package lowbrain.items.main;
 
+import lowbrain.library.command.Command;
+import lowbrain.library.command.CommandHandler;
 import lowbrain.library.config.YamlConfig;
 import lowbrain.library.fn;
-import org.bukkit.Bukkit;
-import org.bukkit.ChatColor;
-import org.bukkit.Material;
-import org.bukkit.NamespacedKey;
+import lowbrain.library.main.LowbrainLibrary;
+import org.bukkit.*;
+import org.bukkit.command.CommandSender;
+import org.bukkit.command.ConsoleCommandSender;
 import org.bukkit.configuration.ConfigurationSection;
 import org.bukkit.configuration.file.FileConfiguration;
+import org.bukkit.entity.Player;
 import org.bukkit.inventory.ItemStack;
 import org.bukkit.inventory.ShapedRecipe;
 import org.bukkit.inventory.meta.ItemMeta;
@@ -47,9 +50,10 @@ public class LowbrainItems extends JavaPlugin {
         createCustomItems();
         createCustomStaffs();
 
-        this.getCommand("lbitems").setExecutor(new CommandHandler(this));
+        regCommand();
         this.getLogger().info("[LowbrainItems] " + getDescription().getVersion() + " enabled!");
     }
+
     @Override
     public void onDisable() {
         Bukkit.getServer().getScheduler().cancelTasks(this);
@@ -70,6 +74,110 @@ public class LowbrainItems extends JavaPlugin {
 
     public FileConfiguration getStaffConfig() {
         return staffConfig;
+    }
+
+    private void regCommand() {
+        CommandHandler c = LowbrainLibrary.getInstance().getBaseCmdHandler();
+        Command sub;
+        Command onGive;
+        Command onList;
+
+        c.register("items", sub = new Command("items") {
+            @Override
+            public CommandStatus execute(CommandSender who, String[] args, String cmd) {
+                return CommandStatus.INVALID;
+            }
+        });
+
+        sub.register("give", onGive = new Command("give") {
+            @Override
+            public CommandStatus execute(CommandSender who, String[] args, String cmd) {
+                Player to = null;
+                int amount = 0;
+                ItemStack item = null;
+                String itemName = null;
+
+                switch (args.length) {
+                    case 2:
+                        if (!(who instanceof Player)) {
+                            who.sendMessage("This command is only available to players !");
+                            return CommandStatus.VALID;
+                        }
+
+                        if (!who.hasPermission("lb.items.give-self")) {
+                            who.sendMessage("Insufficient permissions !");
+                            return CommandStatus.INSUFFICIENT_PERMISSION;
+                        }
+
+                        to = (Player)who;
+                        itemName = args[0];
+                        amount = fn.toInteger(args[1], 1);
+                        break;
+                    case 3:
+                        if (!who.hasPermission("lb.items.give-others")) {
+                            who.sendMessage("Insufficient permissions !");
+                            return CommandStatus.INSUFFICIENT_PERMISSION;
+                        }
+
+                        to = LowbrainItems.getInstance().getServer().getPlayer(args[0]);
+                        itemName = args[1];
+                        amount = fn.toInteger(args[2],1);
+                        break;
+                    default:
+                        return CommandStatus.INVALID;
+                }
+
+                item = LowbrainItems.getInstance().getItems().getOrDefault(itemName, LowbrainItems.getInstance().getStaffs().get(itemName));
+
+                if(to == null){
+                    who.sendMessage(ChatColor.RED + "[LowbrainItems] There is no such player ! ==> " + args[1]);
+                    return CommandStatus.INVALID;
+                }
+
+                if(item == null){
+                    who.sendMessage(ChatColor.RED + "[LowbrainItems] There is no such item ! ==> " + itemName);
+                    return CommandStatus.INVALID;
+                }
+
+                try {
+                    HashMap<Integer, ItemStack> leftOver = new HashMap<Integer, ItemStack>();
+
+                    for (int i = 0; i < amount; i++)
+                        leftOver.putAll((to.getInventory().addItem(item)));
+
+                    if (!leftOver.isEmpty()) {
+                        Location loc = to.getLocation();
+                        loc.getWorld().dropItem(loc,item);
+                    }
+
+                    to.updateInventory();
+                    who.sendMessage(ChatColor.GREEN + "[LowbrainItems] " + item.getItemMeta().getDisplayName() + " given to " + to.getName());
+                } catch (Exception e){
+                    who.sendMessage(ChatColor.RED + "[LowbrainItems] An error occurred. Could not give item to player !");
+                }
+                return CommandStatus.VALID;
+            }
+        });
+
+        sub.register("list", onList = new Command("list") {
+            @Override
+            public CommandStatus execute(CommandSender who, String[] args, String cmd) {
+                String lst = "[LowbrainItems] ***** list *****";
+
+                int i = -1;
+
+                for(Map.Entry<String, ItemStack> entry : LowbrainItems.getInstance().getItems().entrySet())
+                    lst += entry.getKey() + (i++ % 4 == 0 ? " \n " : ", ");
+
+                for(Map.Entry<String, ItemStack> entry : LowbrainItems.getInstance().getStaffs().entrySet())
+                    lst += entry.getKey() + (i++ % 4 == 0 ? " \n " : ", ");
+
+                lst += "[LowbrainItems] ****************";
+                who.sendMessage(ChatColor.GREEN + lst);
+                return CommandStatus.VALID;
+            }
+        });
+        onList.addPermission("lb.items.list");
     }
 
     private boolean createCustomItems(){

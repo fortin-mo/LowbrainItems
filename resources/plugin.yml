@@ -6,12 +6,15 @@ depend: [LowbrainLibrary]
 softdepend: [LowbrainEconomy]
 description: Create custom items
 permission:
- lbitems.give-self:
+ lb.items.give-self:
   description: give custom item to yourself
- lbitems.give-others:
+  default: op
+ lb.items.give-others:
   description: give custom item to other players
- lbitems.list:
+  default: op
+ lb.items.list:
   description: list all items
+  default: op
 commands:
  lbitems:
   usage: |
