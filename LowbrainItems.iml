@@ -18,5 +18,6 @@
     </orderEntry>
     <orderEntry type="module" module-name="LowbrainLibrary" />
     <orderEntry type="library" name="spigot-1.12.2" level="project" />
+    <orderEntry type="module" module-name="LowbrainEconomy" />
   </component>
 </module>

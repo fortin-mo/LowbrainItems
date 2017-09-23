@@ -1,5 +1,6 @@
 package lowbrain.items.main;
 
+import lowbrain.economy.main.LowbrainEconomy;
 import lowbrain.library.command.Command;
 import lowbrain.library.command.CommandHandler;
 import lowbrain.library.config.YamlConfig;
@@ -33,6 +34,7 @@ public class LowbrainItems extends JavaPlugin {
 
     private YamlConfig config;
     private YamlConfig staffConfig;
+    private LowbrainEconomy lbEcon;
 
     @Contract(pure = true)
     public static LowbrainItems getInstance() {return instance;}
@@ -46,6 +48,9 @@ public class LowbrainItems extends JavaPlugin {
 
         loadConfig();
         namespacedKey = new NamespacedKey(this, "LowbrainItems");
+
+        if (this.getServer().getPluginManager().isPluginEnabled("LowbrainEconomy"))
+            this.lbEcon = LowbrainEconomy.getInstance();
 
         createCustomItems();
         createCustomStaffs();
@@ -68,11 +73,11 @@ public class LowbrainItems extends JavaPlugin {
     }
 
     @Override
-    public FileConfiguration getConfig() {
+    public YamlConfig getConfig() {
         return config;
     }
 
-    public FileConfiguration getStaffConfig() {
+    public YamlConfig getStaffConfig() {
         return staffConfig;
     }
 
@@ -197,11 +202,7 @@ public class LowbrainItems extends JavaPlugin {
 
                     ChatColor color = ChatColor.getByChar(getConfig().getString(name +".display_color"));
 
-                    if(color != null)
-                        ESmeta.setDisplayName(color + name);
-
-                    else
-                        ESmeta.setDisplayName(name);
+                    ESmeta.setDisplayName(color != null ? (color + "") : "" + name);
 
                     List<String> lores = getConfig().getStringList(name + ".lores");
 
@@ -269,7 +270,9 @@ public class LowbrainItems extends JavaPlugin {
                             , shape[2].trim().replace("-"," "));
 
                     if (setRecipeIngredients(customRecipe, recipeSection.getStringList("ingredients"))) {
-                        this.getItems().put(name,customRecipe.getResult());
+                        ItemStack i = customRecipe.getResult();
+                        this.getItems().put(name, i);
+                        this.lbEcon.getDataHandler().add(name, i);
                         Bukkit.addRecipe(customRecipe);
                     }
                 }
@@ -389,7 +392,9 @@ public class LowbrainItems extends JavaPlugin {
                         , shape[2].trim().replace("-"," "));
 
                 if (setRecipeIngredients(customRecipe, recipeSection.getStringList("ingredients"))) {
-                    this.getStaffs().put(staffName, customRecipe.getResult());
+                    ItemStack i = customRecipe.getResult();
+                    this.getStaffs().put(staffName, i);
+                    this.lbEcon.getDataHandler().add(staffName, i);
                     Bukkit.addRecipe(customRecipe);
                 }
             }
